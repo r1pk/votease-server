@@ -9,8 +9,9 @@ import { ValidateUsernameUniqueness } from '../commands/ValidateUsernameUniquene
 
 import { UpdateRoomPoll } from '../commands/UpdateRoomPoll.js';
 import { CreateUserInstance } from '../commands/CreateUserInstance.js';
-import { DeleteUserInstance } from '../commands/DeleteUserInstance.js';
+import { SetRoomOwner } from '../commands/SetRoomOwner.js';
 import { DeleteUserAnswer } from '../commands/DeleteUserAnswer.js';
+import { DeleteUserInstance } from '../commands/DeleteUserInstance.js';
 
 import { logger } from '##/logger.js';
 
@@ -37,6 +38,10 @@ export class VoteRoom extends Room {
         userId: client.sessionId,
         username: options.username,
       });
+      this.dispatcher.dispatch(new SetRoomOwner(), {
+        requirement: this.state.users.size === 1,
+        userId: client.sessionId,
+      });
 
       logger.debug('Client joined!', { roomId: this.roomId, userId: client.sessionId, username: options.username });
     } catch (error) {
@@ -51,6 +56,10 @@ export class VoteRoom extends Room {
       });
       this.dispatcher.dispatch(new DeleteUserAnswer(), {
         userId: client.sessionId,
+      });
+      this.dispatcher.dispatch(new SetRoomOwner(), {
+        requirement: this.state.users.size > 0 && this.state.owner.id === client.sessionId,
+        userId: this.state.users.keys().next().value,
       });
 
       logger.debug('Client left!', { roomId: this.roomId, userId: client.sessionId });
