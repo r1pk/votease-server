@@ -3,18 +3,20 @@ import { Dispatcher } from '@colyseus/command';
 
 import { RoomState } from '../schemas/RoomState.js';
 
+import { ValidateCastedAnswers } from '../commands/ValidateCastedAnswers.js';
 import { ValidateRoomPoll } from '../commands/ValidateRoomPoll.js';
+import { ValidateUserAnswer } from '../commands/ValidateUserAnswer.js';
 import { ValidateUsername } from '../commands/ValidateUsername.js';
 import { ValidateUsernameUniqueness } from '../commands/ValidateUsernameUniqueness.js';
-import { ValidateUserAnswer } from '../commands/ValidateUserAnswer.js';
-import { ValidateCastedAnswers } from '../commands/ValidateCastedAnswers.js';
+import { ValidateUserPermissions } from '../commands/ValidateUserPermissions.js';
 
-import { UpdateRoomPoll } from '../commands/UpdateRoomPoll.js';
+import { CreateUserAnswer } from '../commands/CreateUserAnswer.js';
 import { CreateUserInstance } from '../commands/CreateUserInstance.js';
-import { SetRoomOwner } from '../commands/SetRoomOwner.js';
 import { DeleteUserAnswer } from '../commands/DeleteUserAnswer.js';
 import { DeleteUserInstance } from '../commands/DeleteUserInstance.js';
-import { CreateUserAnswer } from '../commands/CreateUserAnswer.js';
+import { ResetPollAnswers } from '../commands/ResetPollAnswers.js';
+import { SetRoomOwner } from '../commands/SetRoomOwner.js';
+import { UpdateRoomPoll } from '../commands/UpdateRoomPoll.js';
 
 import { logger } from '##/logger.js';
 
@@ -28,6 +30,7 @@ export class VoteRoom extends Room {
     this.dispatcher.dispatch(new ValidateRoomPoll(), { poll: options.poll });
     this.dispatcher.dispatch(new UpdateRoomPoll(), { poll: options.poll });
 
+    this.onMessage('poll::reset-answers', this.onResetPollAnswers.bind(this));
     this.onMessage('poll::cast-answer', this.onCastAnswer.bind(this));
   }
 
@@ -81,6 +84,19 @@ export class VoteRoom extends Room {
     client.error(0, error.message);
 
     logger.error('Something went wrong!', { roomId: this.roomId, userId: client.sessionId, message: error.message });
+  }
+
+  onResetPollAnswers(client) {
+    try {
+      this.dispatcher.dispatch(new ValidateUserPermissions(), {
+        userId: client.sessionId,
+      });
+      this.dispatcher.dispatch(new ResetPollAnswers());
+
+      logger.debug('Client reset poll answers!', { roomId: this.roomId, userId: client.sessionId });
+    } catch (error) {
+      this.onError(client, error);
+    }
   }
 
   onCastAnswer(client, options) {
