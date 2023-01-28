@@ -6,12 +6,15 @@ import { RoomState } from '../schemas/RoomState.js';
 import { ValidateRoomPoll } from '../commands/ValidateRoomPoll.js';
 import { ValidateUsername } from '../commands/ValidateUsername.js';
 import { ValidateUsernameUniqueness } from '../commands/ValidateUsernameUniqueness.js';
+import { ValidateUserAnswer } from '../commands/ValidateUserAnswer.js';
+import { ValidateCastedAnswers } from '../commands/ValidateCastedAnswers.js';
 
 import { UpdateRoomPoll } from '../commands/UpdateRoomPoll.js';
 import { CreateUserInstance } from '../commands/CreateUserInstance.js';
 import { SetRoomOwner } from '../commands/SetRoomOwner.js';
 import { DeleteUserAnswer } from '../commands/DeleteUserAnswer.js';
 import { DeleteUserInstance } from '../commands/DeleteUserInstance.js';
+import { CreateUserAnswer } from '../commands/CreateUserAnswer.js';
 
 import { logger } from '##/logger.js';
 
@@ -24,6 +27,8 @@ export class VoteRoom extends Room {
 
     this.dispatcher.dispatch(new ValidateRoomPoll(), { poll: options.poll });
     this.dispatcher.dispatch(new UpdateRoomPoll(), { poll: options.poll });
+
+    this.onMessage('poll::cast-answer', this.onCastAnswer.bind(this));
   }
 
   onJoin(client, options) {
@@ -76,5 +81,24 @@ export class VoteRoom extends Room {
     client.error(0, error.message);
 
     logger.error('Something went wrong!', { roomId: this.roomId, userId: client.sessionId, message: error.message });
+  }
+
+  onCastAnswer(client, options) {
+    try {
+      this.dispatcher.dispatch(new ValidateUserAnswer(), {
+        choiceId: options.choiceId,
+      });
+      this.dispatcher.dispatch(new ValidateCastedAnswers(), {
+        userId: client.sessionId,
+      });
+      this.dispatcher.dispatch(new CreateUserAnswer(), {
+        choiceId: options.choiceId,
+        userId: client.sessionId,
+      });
+
+      logger.debug('Client casted answer!', { roomId: this.roomId, userId: client.sessionId });
+    } catch (error) {
+      this.onError(client, error);
+    }
   }
 }
