@@ -1,7 +1,6 @@
-import { Schema, MapSchema, defineTypes } from '@colyseus/schema';
+import { Schema, MapSchema, ArraySchema, defineTypes } from '@colyseus/schema';
 
 import { User } from './User.js';
-import { Configuration } from './Configuration.js';
 import { Poll } from './Poll.js';
 
 export class RoomState extends Schema {
@@ -9,17 +8,15 @@ export class RoomState extends Schema {
     super();
 
     this.owner = new User();
-    this.config = new Configuration();
-    this.poll = new Poll();
     this.users = new MapSchema();
+    this.poll = new Poll();
   }
 }
 
 defineTypes(RoomState, {
   owner: User,
-  config: Configuration,
-  poll: Poll,
   users: {
     map: User,
   },
+  poll: Poll,
 });
