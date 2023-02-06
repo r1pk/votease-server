@@ -27,9 +27,14 @@ export class VoteRoom extends Room {
     this.setPrivate(true);
     this.setState(new RoomState());
 
-    this.dispatcher.dispatch(new ValidateRoomPoll(), { poll: options.poll });
-    this.dispatcher.dispatch(new UpdateRoomPoll(), { poll: options.poll });
+    this.dispatcher.dispatch(new ValidateRoomPoll(), {
+      poll: options.poll,
+    });
+    this.dispatcher.dispatch(new UpdateRoomPoll(), {
+      poll: options.poll,
+    });
 
+    this.onMessage('poll::edit', this.onEditPool.bind(this));
     this.onMessage('poll::reset-answers', this.onResetPollAnswers.bind(this));
     this.onMessage('poll::cast-answer', this.onCastAnswer.bind(this));
   }
@@ -84,6 +89,25 @@ export class VoteRoom extends Room {
     client.error(0, error.message);
 
     logger.error('Something went wrong!', { roomId: this.roomId, userId: client.sessionId, message: error.message });
+  }
+
+  onEditPool(client, options) {
+    try {
+      this.dispatcher.dispatch(new ValidateUserPermissions(), {
+        userId: client.sessionId,
+      });
+      this.dispatcher.dispatch(new ResetPollAnswers());
+      this.dispatcher.dispatch(new ValidateRoomPoll(), {
+        poll: options.poll,
+      });
+      this.dispatcher.dispatch(new UpdateRoomPoll(), {
+        poll: options.poll,
+      });
+
+      logger.debug('Client edited poll!', { roomId: this.roomId, userId: client.sessionId });
+    } catch (error) {
+      this.onError(client, error);
+    }
   }
 
   onResetPollAnswers(client) {

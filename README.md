@@ -63,12 +63,13 @@ Files outside of `src` directory are mostly configuration files for git, editor 
 
 #### Events listened by server
 
-- `poll::cast-answer` - cast answer to poll.
-  Accepts object with `choiceId` field which is a string with id of selected choice.
+- `poll::edit` - edit current poll in room.
+  Accept object with `title` and `choices` fields. `title` is a string with poll title and `choices` is an array of strings with poll choices.
 
-  ```
+  ```json
   {
-    choiceId: string
+    "title": "string",
+    "choices": ["string"]
   }
   ```
 
@@ -77,6 +78,15 @@ Files outside of `src` directory are mostly configuration files for git, editor 
 
   ```
   {}
+  ```
+
+- `poll::cast-answer` - cast answer to poll.
+  Accepts object with `choiceId` field which is a string with id of selected choice.
+
+  ```
+  {
+    choiceId: string
+  }
   ```
 
 #### Client communication
