@@ -1,7 +1,7 @@
 # VotEase-server
 
-VotEase-server is a server written in [Node.js](https://nodejs.org/en/) using [Colyseus.js](https://www.colyseus.io/) framework for VotEase application which allows to quickly create
-fast and small polls.
+VotEase-server is a server written in [Node.js](https://nodejs.org/en/) using [Colyseus.js](https://www.colyseus.io/) framework for VotEase application.  
+Server is responsible for handling all communication between clients in specific rooms and managing room state.
 
 ## Pre-requisites
 
